@@ -6,7 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\dashboard\dashboardController;
 use App\Http\Controllers\kategori\kategoriController;
 use App\Http\Controllers\buku\bukuController;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Http\Controllers\pdf\pdfController;
 
 Route::redirect('/', '/login');
 
@@ -32,14 +32,6 @@ Route::middleware(['auth', 'check.session'])->group(function () {
     Route::delete('/buku/{id}', [bukuController::class, 'destroy'])->name('buku.destroy');
 
     // PDF Routes
-    Route::get('/pdf/sertifikat', function () {
-        $pdf = Pdf::loadView('pdf.sertifikat')->setPaper('a4', 'landscape');
-        return $pdf->download('sertifikat.pdf');
-    })->name('pdf.sertifikat');
-
-    Route::get('/pdf/undangan', function () {
-        $pdf = Pdf::loadView('pdf.undangan')->setPaper('a4', 'portrait');
-        return $pdf->download('undangan.pdf');
-    })->name('pdf.undangan');
-
+    Route::get('pdf/landscape', [pdfController::class, 'sertifikat'])->name('pdf.sertifikat');
+    Route::get('pdf/portrait', [pdfController::class, 'undangan'])->name('pdf.undangan');
 });
