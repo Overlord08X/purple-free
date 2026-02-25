@@ -2,12 +2,8 @@
 
 @include('layouts.navbar')
 
-<div class="container-fluid page-body-wrapper">
+@include('layouts.sidebar')
 
-    @include('layouts.sidebar')
-
-    @yield('content')
-
-</div>
+@yield('content')
 
 @include('layouts.footer')

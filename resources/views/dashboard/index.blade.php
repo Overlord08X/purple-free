@@ -10,6 +10,5 @@
     {{-- ISI DASHBOARD TETAP SAMA --}}
 
   </div>
-</div>
 
-@endsection
+  @endsection

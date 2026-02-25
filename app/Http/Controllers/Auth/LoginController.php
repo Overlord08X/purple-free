@@ -54,7 +54,7 @@ class LoginController extends Controller
 
     public function handleGoogle()
     {
-        $googleUser = Socialite::driver('google')->user(); // ❌ Jangan stateless()
+        $googleUser = Socialite::driver('google')->user();
 
         $user = User::updateOrCreate(
             ['email' => $googleUser->getEmail()],

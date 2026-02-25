@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-    <h1>Undangan Acara</h1>
+    <h1>Undangan Acara 2</h1>
     <p>Ini adalah contoh isi PDF undangan.</p>
 </body>
 </html>
