@@ -7,6 +7,7 @@ use App\Http\Controllers\dashboard\dashboardController;
 use App\Http\Controllers\kategori\kategoriController;
 use App\Http\Controllers\buku\bukuController;
 use App\Http\Controllers\pdf\pdfController;
+use App\Http\Controllers\tagHarga\tagHargaController;
 
 Route::redirect('/', '/login');
 
@@ -34,4 +35,8 @@ Route::middleware(['auth', 'check.session'])->group(function () {
     // PDF Routes
     Route::get('pdf/landscape', [pdfController::class, 'sertifikat'])->name('pdf.sertifikat');
     Route::get('pdf/portrait', [pdfController::class, 'undangan'])->name('pdf.undangan');
+
+    // Tag Harga Routes
+    Route::get('/tagHarga', [TagHargaController::class, 'index'])->name('tagHarga.index');
+    Route::post('/tagHarga/cetak', [TagHargaController::class, 'cetak'])->name('tagharga.cetak');
 });

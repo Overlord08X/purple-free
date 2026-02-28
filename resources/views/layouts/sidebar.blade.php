@@ -66,6 +66,19 @@
         </div>
       </li>
       <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#TagHarga" aria-expanded="false" aria-controls="TagHarga">
+          <span class="menu-title">Tag Harga</span>
+          <i class="mdi mdi-printer menu-icon"></i>
+        </a>
+        <div class="collapse" id="TagHarga">
+          <ul class="nav flex-column sub-menu">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('tagHarga.index') }}">Tag Harga</a>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" href="docs/documentation.html" target="_blank">
           <span class="menu-title">Documentation</span>
           <i class="mdi mdi-file-document-box menu-icon"></i>
