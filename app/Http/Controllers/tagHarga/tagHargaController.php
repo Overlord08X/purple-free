@@ -11,39 +11,60 @@ class tagHargaController extends Controller
 {
     public function index()
     {
-        $barang = Barang::all();
+        $barang = Barang::orderBy('nama_barang')->get();
         return view('tagHarga.index', compact('barang'));
     }
 
     public function cetak(Request $request)
     {
         $request->validate([
-            'id' => 'required|array',
-            'x' => 'required|integer|min:1|max:5',
-            'y' => 'required|integer|min:1|max:8',
+            'items' => 'required|array',
+            'x'     => 'required|integer|min:1|max:5',
+            'y'     => 'required|integer|min:1|max:8',
         ]);
 
-        $barang = Barang::whereIn('idbarang', $request->id)->get();
+        $x = (int) $request->x;
+        $y = (int) $request->y;
 
-        $startX = $request->x;
-        $startY = $request->y;
+        // Hitung posisi awal (1–40)
+        $startIndex = (($y - 1) * 5) + $x;
 
-        $startIndex = ($startY - 1) * 5 + $startX;
-
+        // Siapkan 40 slot label kosong
         $labels = array_fill(1, 40, null);
+        $currentIndex = $startIndex;
 
-        $i = $startIndex;
+        foreach ($request->items as $item) {
 
-        foreach ($barang as $b) {
-            if ($i > 40) break;
-            $labels[$i] = $b;
-            $i++;
+            // 🔥 AMAN dari undefined key
+            if (!isset($item['id']) || !isset($item['qty'])) {
+                continue;
+            }
+
+            $barang = Barang::where('idbarang', $item['id'])->first();
+            if (!$barang) {
+                continue;
+            }
+
+            $qty = (int) $item['qty'];
+
+            if ($qty < 1) {
+                $qty = 1;
+            }
+
+            for ($i = 0; $i < $qty; $i++) {
+
+                if ($currentIndex > 40) {
+                    break 2; // keluar dari dua loop
+                }
+
+                $labels[$currentIndex] = $barang;
+                $currentIndex++;
+            }
         }
 
-        $pdf = PDF::loadView('tagHarga.pdf', compact('labels'));
-        return $pdf->stream('tag_harga.pdf')
-            ->withHeaders([
-                'X-Success-Message' => 'PDF berhasil dibuat'
-            ]);
+        $pdf = Pdf::loadView('tagHarga.pdf', compact('labels'))
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->stream('tag_harga.pdf');
     }
 }
