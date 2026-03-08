@@ -79,6 +79,39 @@
         </div>
       </li>
       <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#BarangMenu" aria-expanded="false" aria-controls="BarangMenu">
+          <span class="menu-title">Barang</span>
+          <i class="mdi mdi-package-variant menu-icon"></i>
+        </a>
+        <div class="collapse" id="BarangMenu">
+          <ul class="nav flex-column sub-menu">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('barang.index') }}">Data Barang</a>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#Project" aria-expanded="false" aria-controls="Project">
+          <span class="menu-title">Project</span>
+          <i class="mdi mdi-folder menu-icon"></i>
+        </a>
+        <div class="collapse" id="Project">
+          <ul class="nav flex-column sub-menu">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.index') }}">
+                CRUD Barang
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.kota') }}">
+                Select Kota
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" href="docs/documentation.html" target="_blank">
           <span class="menu-title">Documentation</span>
           <i class="mdi mdi-file-document-box menu-icon"></i>

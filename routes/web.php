@@ -8,6 +8,8 @@ use App\Http\Controllers\kategori\kategoriController;
 use App\Http\Controllers\buku\bukuController;
 use App\Http\Controllers\pdf\pdfController;
 use App\Http\Controllers\tagHarga\tagHargaController;
+use App\Http\Controllers\project\projectController;
+use App\Http\Controllers\barang\barangController;
 
 Route::redirect('/', '/login');
 
@@ -39,4 +41,10 @@ Route::middleware(['auth', 'check.session'])->group(function () {
     // Tag Harga Routes
     Route::get('/tagHarga', [TagHargaController::class, 'index'])->name('tagHarga.index');
     Route::post('/tagHarga/cetak', [TagHargaController::class, 'cetak'])->name('tagharga.cetak');
+
+
+    Route::resource('barang', BarangController::class);
+
+    Route::get('/project', [projectController::class, 'index'])->name('project.index');
+    Route::get('/kota', [projectController::class, 'kota'])->name('project.kota');
 });

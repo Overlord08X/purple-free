@@ -87,7 +87,6 @@
 
     </div>
 
-
     {{-- SCRIPT LANGSUNG DI SINI (ANTI GAGAL) --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
