@@ -5,6 +5,7 @@ namespace App\Http\Controllers\barang;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Barang;
+use Illuminate\Support\Facades\DB;
 
 class barangController extends Controller
 {
@@ -63,5 +64,14 @@ class barangController extends Controller
         $barang = Barang::findOrFail($id);
         $barang->delete();
         return response()->json(['success' => true, 'message' => 'Barang berhasil dihapus.']);
+    }
+
+    public function show($id)
+    {
+        $barang = DB::table('barang')
+            ->where('idbarang', $id)
+            ->first();
+
+        return response()->json($barang);
     }
 }

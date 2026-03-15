@@ -9,6 +9,8 @@ use App\Http\Controllers\buku\bukuController;
 use App\Http\Controllers\pdf\pdfController;
 use App\Http\Controllers\tagHarga\tagHargaController;
 use App\Http\Controllers\project\projectController;
+use App\Http\Controllers\project\wilayahController;
+use App\Http\Controllers\project\posController;
 use App\Http\Controllers\barang\barangController;
 
 Route::redirect('/', '/login');
@@ -47,4 +49,20 @@ Route::middleware(['auth', 'check.session'])->group(function () {
 
     Route::get('/project', [projectController::class, 'index'])->name('project.index');
     Route::get('/kota', [projectController::class, 'kota'])->name('project.kota');
+
+    Route::get('/wilayah', [wilayahController::class, 'index'])->name('project.wilayah');
+
+    Route::get('/provinsi', [wilayahController::class, 'provinsi']);
+    Route::get('/kota/{id}', [wilayahController::class, 'kota']);
+    Route::get('/kecamatan/{id}', [wilayahController::class, 'kecamatan']);
+    Route::get('/kelurahan/{id}', [wilayahController::class, 'kelurahan']);
+
+    Route::get('/pos', [posController::class, 'index'])->name('project.pos');
+
+    Route::get('/barang/{kode}', function ($kode) {
+        $barang = \App\Models\Barang::where('idbarang', $kode)->first();
+        return response()->json($barang); // penting: JSON
+    });
+
+    Route::post('/transaksi', [posController::class, 'simpan']);
 });

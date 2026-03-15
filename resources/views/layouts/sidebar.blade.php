@@ -108,6 +108,16 @@
                 Select Kota
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.wilayah') }}">
+                Wilayah
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.pos') }}">
+                Point Of Sales (POS)
+              </a>
+            </li>
           </ul>
         </div>
       </li>

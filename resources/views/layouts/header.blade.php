@@ -20,7 +20,6 @@
     <!-- Layout styles -->
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <!-- Select2 JS -->
-    <script src="{{ asset('assets/vendors/js/vendor.bundle.base.js') }}"></script>
     @stack('styles')
     <!-- End layout styles -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png') }}" />
