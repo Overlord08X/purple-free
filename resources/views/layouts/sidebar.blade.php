@@ -92,6 +92,12 @@
         </div>
       </li>
       <li class="nav-item">
+        <a class="nav-link" href="{{ route('payment.index') }}">
+          <span class="menu-title">Payment</span>
+          <i class="mdi mdi-credit-card menu-icon"></i>
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#Project" aria-expanded="false" aria-controls="Project">
           <span class="menu-title">Project</span>
           <i class="mdi mdi-folder menu-icon"></i>

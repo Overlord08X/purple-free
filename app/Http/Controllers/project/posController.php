@@ -10,7 +10,8 @@ class posController extends Controller
 {
     public function index()
     {
-        return view('project.pos');
+        $barangs = DB::table('barang')->get();
+        return view('project.pos', compact('barangs'));
     }
 
     public function getBarang($kode)
@@ -55,8 +56,12 @@ class posController extends Controller
 
             DB::commit();
 
+            // Simpan idpenjualan ke session untuk payment
+            session(['idpenjualan' => $idpenjualan, 'total' => $total]);
+
             return response()->json([
-                'status' => 'success'
+                'status' => 'success',
+                'redirect' => route('payment.index', ['idpenjualan' => $idpenjualan])
             ]);
         } catch (\Exception $e) {
 

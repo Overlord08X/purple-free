@@ -38,6 +38,7 @@ public function run(): void
     $this->call([
         kategoriSeeder::class,
         bukuSeeder::class,
+        VendorSeeder::class,
     ]);
 }
 }

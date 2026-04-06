@@ -7,13 +7,16 @@ use App\Http\Controllers\dashboard\dashboardController;
 use App\Http\Controllers\kategori\kategoriController;
 use App\Http\Controllers\buku\bukuController;
 use App\Http\Controllers\pdf\pdfController;
-use App\Http\Controllers\tagHarga\tagHargaController;
+use App\Http\Controllers\tagHarga\tagHargaController as TagHargaController;
 use App\Http\Controllers\project\projectController;
 use App\Http\Controllers\project\wilayahController;
 use App\Http\Controllers\project\posController;
-use App\Http\Controllers\barang\barangController;
+use App\Http\Controllers\payment\pesananController;
+use App\Http\Controllers\payment\vendorController;
+use App\Http\Controllers\barang\barangController as BarangController;
+use App\Http\Controllers\payment\paymentController;
 
-Route::redirect('/', '/login');
+Route::redirect('/', '/pesanan');
 
 Auth::routes();
 
@@ -25,10 +28,19 @@ Route::get('/auth/google/callback', [LoginController::class, 'handleGoogle'])->n
 Route::get('/otp', [LoginController::class, 'showOtpForm'])->name('otp.form');
 Route::post('/otp/verify', [LoginController::class, 'verifyOtp'])->name('otp.verify');
 
+// Pesanan Routes (public)
+Route::get('/pesanan', [pesananController::class, 'index'])->name('pesanan.index');
+Route::get('/pesanan/menus/{vendorId}', [pesananController::class, 'getMenus'])->name('pesanan.menus');
+Route::post('/pesanan/store', [pesananController::class, 'store'])->name('pesanan.store');
+Route::get('/pesanan/payment/{id}', [pesananController::class, 'payment'])->name('pesanan.payment');
+
 // Protected Routes
 Route::middleware(['auth', 'check.session'])->group(function () {
 
     Route::get('/dashboard', [dashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/vendor/dashboard', [vendorController::class, 'dashboard'])->name('vendor.dashboard');
+    Route::post('/vendor/menu', [vendorController::class, 'storeMenu'])->name('vendor.menu.store');
+    Route::delete('/vendor/menu/{id}', [vendorController::class, 'destroyMenu'])->name('vendor.menu.destroy');
     Route::get('/kategori', [kategoriController::class, 'index'])->name('kategori.index');
     Route::post('/kategori/store', [kategoriController::class, 'store'])->name('kategori.store');
     Route::delete('/kategori/{id}', [kategoriController::class, 'destroy'])->name('kategori.destroy');
@@ -65,4 +77,8 @@ Route::middleware(['auth', 'check.session'])->group(function () {
     });
 
     Route::post('/transaksi', [posController::class, 'simpan']);
+
+    Route::get('/payment/{idpenjualan?}', [paymentController::class, 'index'])->name('payment.index');
+    Route::post('/checkout', [paymentController::class, 'checkout'])->name('payment.checkout');
+    Route::post('/payment/callback', [paymentController::class, 'callback'])->name('payment.callback');
 });

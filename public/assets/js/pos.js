@@ -12,6 +12,20 @@ function rupiah(n) {
     return new Intl.NumberFormat("id-ID").format(n);
 }
 
+// PILIH BARANG DARI TABEL
+$("#tableBarang").on("click", ".pilih-barang", function () {
+    let kode = $(this).data("kode");
+    let nama = $(this).data("nama");
+    let harga = $(this).data("harga");
+
+    $("#idBarang").val(kode);
+    $("#namaBarang").val(nama);
+    $("#hargaBarang").val(harga);
+    $("#jumlah").val(1);
+
+    $("#btnTambah").prop("disabled", false);
+});
+
 // AUTO CARI BARANG
 $("#idBarang").keypress(function (e) {
     if (e.which == 13) {
@@ -179,17 +193,21 @@ $("#btnBayar").click(function () {
             items: items,
         })
 
-        .then(function () {
-            Swal.fire({
-                icon: "success",
-                title: "Berhasil",
-                text: "Transaksi berhasil disimpan",
-            });
+        .then(function (response) {
+            if (response.data.redirect) {
+                window.location.href = response.data.redirect;
+            } else {
+                Swal.fire({
+                    icon: "success",
+                    title: "Berhasil",
+                    text: "Transaksi berhasil disimpan",
+                });
 
-            $("#tablePOS tbody").html("");
+                $("#tablePOS tbody").html("");
 
-            updateTotal();
-            clearInput();
+                updateTotal();
+                clearInput();
+            }
         })
 
         .catch(function () {
