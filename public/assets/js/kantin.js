@@ -12,6 +12,20 @@ function rupiah(n) {
     return new Intl.NumberFormat("id-ID").format(n);
 }
 
+// PILIH BARANG DARI TABEL
+$("#tableBarang").on("click", ".pilih-barang", function () {
+    let kode = $(this).data("kode");
+    let nama = $(this).data("nama");
+    let harga = $(this).data("harga");
+
+    $("#idBarang").val(kode);
+    $("#namaBarang").val(nama);
+    $("#hargaBarang").val(harga);
+    $("#jumlah").val(1);
+
+    $("#btnTambah").prop("disabled", false);
+});
+
 // AUTO CARI BARANG
 $("#idBarang").keypress(function (e) {
     if (e.which == 13) {
@@ -168,9 +182,10 @@ $("#btnBayar").click(function () {
         Swal.fire("Tidak ada transaksi");
 
         $("#spinnerBayarAxios").hide();
-        $("#textBayarAxios").html('<i class="mdi mdi-cash"></i> Bayar');
+        $("#textBayarAxios").html(
+            '<i class="mdi mdi-cash"></i> Lanjutkan Pembayaran',
+        );
         $("#btnBayar").prop("disabled", false);
-
         return;
     }
 
@@ -178,28 +193,35 @@ $("#btnBayar").click(function () {
         .post("/transaksi", {
             items: items,
         })
+        .then(function (response) {
+            console.log("FULL RESPONSE:", response);
+            console.log("DATA:", response.data);
 
-        .then(function () {
+            console.log("RESPONSE:", response.data); // 🔥 DEBUG WAJIB
+
+            // ✅ FIX SAFETY CHECK
+            if (response.data && response.data.redirect) {
+                window.location.href = response.data.redirect;
+            } else {
+                Swal.fire({
+                    icon: "success",
+                    title: "Transaksi berhasil disimpan",
+                    text: "Redirect gagal, tidak ada URL payment",
+                });
+            }
+        })
+        .catch(function (error) {
+            console.log(error);
+
             Swal.fire({
-                icon: "success",
-                title: "Berhasil",
-                text: "Transaksi berhasil disimpan",
+                icon: "error",
+                title: "Gagal menyimpan transaksi",
             });
-
-            $("#tablePOS tbody").html("");
-
-            updateTotal();
-            clearInput();
         })
-
-        .catch(function () {
-            Swal.fire("Terjadi kesalahan");
-        })
-
         .finally(function () {
             $("#spinnerBayarAxios").hide();
             $("#textBayarAxios").html(
-                '<i class="mdi mdi-cash"></i> Bayar (Axios)',
+                '<i class="mdi mdi-cash"></i> Lanjutkan Pembayaran',
             );
             $("#btnBayar").prop("disabled", false);
         });

@@ -12,10 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pesanan', function (Blueprint $table) {
-            $table->string('transaction_id')->nullable();
-            $table->string('payment_type')->nullable(); // VA or QRIS
-            $table->string('order_id')->nullable();
-            $table->json('payment_details')->nullable();
+            if (!Schema::hasColumn('pesanan', 'transaction_id')) {
+                $table->string('transaction_id')->nullable();
+            }
+            if (!Schema::hasColumn('pesanan', 'payment_type')) {
+                $table->string('payment_type')->nullable(); // VA or QRIS
+            }
+            if (!Schema::hasColumn('pesanan', 'order_id')) {
+                $table->string('order_id')->nullable();
+            }
+            if (!Schema::hasColumn('pesanan', 'payment_details')) {
+                $table->json('payment_details')->nullable();
+            }
         });
     }
 

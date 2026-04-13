@@ -9,6 +9,9 @@ use App\Models\Menu;
 use App\Models\Pesanan;
 use App\Models\DetailPesanan;
 use Illuminate\Support\Facades\DB;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Support\Facades\Log;
 
 class pesananController extends Controller
 {
@@ -20,14 +23,13 @@ class pesananController extends Controller
 
     public function getMenus($vendorId)
     {
-        $menus = Menu::where('idvendor', $vendorId)->get();
-        return response()->json($menus);
+        return response()->json(Menu::where('idvendor', $vendorId)->get());
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'vendor_id' => 'required|exists:vendors,idvendor',
+            'vendor_id' => 'required|exists:vendor,idvendor',
             'items' => 'required|array',
             'items.*.menu_id' => 'required|exists:menu,idmenu',
             'items.*.quantity' => 'required|integer|min:1',
@@ -37,27 +39,24 @@ class pesananController extends Controller
         DB::beginTransaction();
 
         try {
-            // Buat user guest jika belum ada
             $guestName = 'Guest_' . str_pad(Pesanan::count() + 1, 7, '0', STR_PAD_LEFT);
 
-            // Hitung total
             $total = 0;
             foreach ($request->items as $item) {
-                $menu = Menu::find($item['menu_id']);
+                $menu = Menu::findOrFail($item['menu_id']);
                 $total += $menu->harga * $item['quantity'];
             }
 
-            // Buat pesanan
             $pesanan = Pesanan::create([
                 'nama' => $guestName,
                 'total' => $total,
                 'status_bayar' => 0,
-                'metode_bayar' => $request->metode_bayar ?? 1, // 1 VA, 2 QRIS
+                'metode_bayar' => $request->metode_bayar ?? 1,
             ]);
 
-            // Buat detail
             foreach ($request->items as $item) {
-                $menu = Menu::find($item['menu_id']);
+                $menu = Menu::findOrFail($item['menu_id']);
+
                 DetailPesanan::create([
                     'idmenu' => $item['menu_id'],
                     'idpesanan' => $pesanan->idpesanan,
@@ -77,9 +76,191 @@ class pesananController extends Controller
         }
     }
 
+    public function success($id)
+    {
+        $pesanan = Pesanan::with('detail.menu')->findOrFail($id);
+
+        if ($pesanan->status_bayar != 1) {
+            return redirect()->route('pesanan.payment', $id)
+                ->with('error', 'Pembayaran belum selesai');
+        }
+
+        return view('pesanan.success', [
+            'pesanan' => $pesanan,
+            'qrCodeDataUri' => $pesanan->qr_code
+        ]);
+    }
+
     public function payment($id)
     {
-        $pesanan = Pesanan::with('detailPesanan.menu')->findOrFail($id);
-        return view('pesanan.payment', compact('pesanan'));
+        $pesanan = Pesanan::with('detail.menu')->findOrFail($id);
+
+        $qrCodeDataUri = null;
+
+        if ($pesanan->status_bayar == 1) {
+            $qrCode = QrCode::create((string) $pesanan->idpesanan)
+                ->setSize(300)
+                ->setMargin(10);
+
+            $writer = new PngWriter();
+            $qrCodeDataUri = $writer->write($qrCode)->getDataUri();
+        }
+
+        return view('pesanan.payment', compact('pesanan', 'qrCodeDataUri'));
+    }
+
+    public function checkout(Request $request)
+    {
+        try {
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            \Midtrans\Config::$clientKey = config('midtrans.client_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+            \Midtrans\Config::$isSanitized = true;
+            \Midtrans\Config::$is3ds = true;
+
+            // 🔥 FIX UTAMA (JANGAN findOrFail langsung)
+            $pesanan = Pesanan::where('idpesanan', $request->order_id)->first();
+
+            if (!$pesanan) {
+                return response()->json([
+                    'error' => 'Pesanan tidak ditemukan: ' . $request->order_id
+                ], 404);
+            }
+
+            // 🔥 MIDTRANS ORDER ID HARUS UNIK
+            $midtransOrderId = 'ORDER-' . $pesanan->idpesanan . '-' . time();
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $midtransOrderId,
+                    'gross_amount' => (int) $pesanan->total,
+                ],
+                'customer_details' => [
+                    'first_name' => $pesanan->nama ?? 'Customer',
+                ],
+            ];
+
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            // simpan order_id midtrans
+            $pesanan->update([
+                'order_id' => $midtransOrderId
+            ]);
+
+            return response()->json([
+                'snap_token' => $snapToken
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function verifyStatus($id)
+    {
+        try {
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+
+            \Midtrans\Config::$curlOptions = [
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => 0,
+            ];
+
+            $pesanan = Pesanan::findOrFail($id);
+
+            if (!$pesanan->order_id) {
+                return back()->with('error', 'Order ID belum tersedia');
+            }
+
+            // 🔥 retry 3x biar nunggu Midtrans update
+            for ($i = 0; $i < 3; $i++) {
+
+                $status = \Midtrans\Transaction::status($pesanan->order_id);
+
+                Log::info('MIDTRANS STATUS', (array) $status);
+
+                if (is_array($status)) {
+                    $status = (object) $status;
+                }
+
+                if (in_array($status->transaction_status, ['settlement', 'capture'])) {
+
+                    $pesanan->update([
+                        'status_bayar' => 1,
+                        'transaction_id' => $status->transaction_id ?? null,
+                        'payment_type' => $status->payment_type ?? null,
+                        'payment_details' => json_encode($status)
+                    ]);
+
+                    // 🔥 GENERATE QR SEKALI SAJA
+                    $qrCode = QrCode::create((string) $pesanan->idpesanan)
+                        ->setSize(300)
+                        ->setMargin(10);
+
+                    $writer = new PngWriter();
+                    $qrImage = $writer->write($qrCode)->getDataUri();
+
+                    $pesanan->update([
+                        'status_bayar' => 1,
+                        'transaction_id' => $status->transaction_id ?? null,
+                        'payment_type' => $status->payment_type ?? null,
+                        'payment_details' => json_encode($status),
+                        'qr_code' => $qrImage
+                    ]);
+
+                    return redirect()->route('pesanan.success', $id);
+                }
+
+                // ⏳ tunggu 2 detik sebelum retry
+                sleep(2);
+            }
+
+            // ❗ kalau masih pending
+            return redirect()->route('pesanan.payment', $id)
+                ->with('info', 'Pembayaran sedang diproses, silakan tunggu...');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function callback(Request $request)
+    {
+        $serverKey = config('midtrans.server_key');
+
+        $hashed = hash(
+            'sha512',
+            $request->order_id .
+                $request->status_code .
+                $request->gross_amount .
+                $serverKey
+        );
+
+        if ($hashed == $request->signature_key) {
+
+            $pesanan = Pesanan::where('order_id', $request->order_id)->first();
+
+            if ($pesanan && in_array($request->transaction_status, ['settlement', 'capture'])) {
+
+                $qrCode = \Endroid\QrCode\QrCode::create((string) $pesanan->idpesanan)
+                    ->setSize(300)
+                    ->setMargin(10);
+
+                $writer = new \Endroid\QrCode\Writer\PngWriter();
+                $qrImage = $writer->write($qrCode)->getDataUri();
+
+                $pesanan->update([
+                    'status_bayar' => 0,
+                    'transaction_id' => $request->transaction_id,
+                    'payment_type' => $request->payment_type,
+                    'payment_details' => json_encode($request->all()),
+                    'qr_code' => $qrImage
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'ok']);
     }
 }

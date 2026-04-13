@@ -57,6 +57,7 @@
                                         <td>{{ $barang->nama_barang }}</td>
                                         <td>{{ number_format($barang->harga_barang,0,',','.') }}</td>
                                         <td>
+                                            <a href="{{ route('barang.cetak', $barang->idbarang) }}" class="btn btn-sm btn-info" target="_blank">Cetak PDF</a>
                                             <button class="btn btn-sm btn-primary btn-ubah">Ubah</button>
                                             <button class="btn btn-sm btn-danger btn-hapus">Hapus</button>
                                         </td>

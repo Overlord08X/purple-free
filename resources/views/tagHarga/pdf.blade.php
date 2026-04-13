@@ -49,20 +49,26 @@
             margin-right: 0;
         }
 
+        .barcode {
+            width: 100%;
+            height: 6px;
+            margin-bottom: 1px;
+        }
+
         .kode {
-            font-size: 7px;
-            margin-bottom: 2px;
+            font-size: 6px;
+            margin-bottom: 1px;
         }
 
         .nama {
             font-weight: bold;
-            font-size: 9px;
+            font-size: 8px;
             line-height: 1.1;
         }
 
         .harga {
-            font-size: 9px;
-            margin-top: 2px;
+            font-size: 8px;
+            margin-top: 1px;
         }
     </style>
 </head>
@@ -81,6 +87,11 @@
 
                     <div class="label">
                         @if(isset($labels[$index]) && $labels[$index])
+                            @php
+                                $generator = new Picqer\Barcode\BarcodeGeneratorPNG();
+                                $barcode = base64_encode($generator->getBarcode($labels[$index]->idbarang, $generator::TYPE_CODE_128));
+                            @endphp
+                            <img src="data:image/png;base64,{{ $barcode }}" class="barcode" />
                             <div class="kode">
                                 {{ $labels[$index]->idbarang }}
                             </div>

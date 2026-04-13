@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class posController extends Controller
+class kantinController extends Controller
 {
     public function index()
     {
-        return view('project.pos');
+        $barangs = DB::table('barang')->get();
+        return view('project.kantin', compact('barangs'));
     }
 
     public function getBarang($kode)
@@ -55,8 +56,12 @@ class posController extends Controller
 
             DB::commit();
 
+            // Simpan idpenjualan ke session untuk payment
+            session(['idpenjualan' => $idpenjualan, 'total' => $total]);
+
             return response()->json([
-                'status' => 'success'
+                'status' => 'success',
+                'redirect' => route('payment.index', ['idpenjualan' => $idpenjualan])
             ]);
         } catch (\Exception $e) {
 

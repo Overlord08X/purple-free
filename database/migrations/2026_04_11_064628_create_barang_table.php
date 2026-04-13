@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('vendor')) {
-            Schema::create('vendor', function (Blueprint $table) {
-                $table->id('idvendor');
-                $table->string('nama_vendor');
+        if (!Schema::hasTable('barang')) {
+            Schema::create('barang', function (Blueprint $table) {
+                $table->bigIncrements('idbarang'); // PRIMARY KEY custom
+                $table->string('nama_barang');
+                $table->decimal('harga_barang', 15, 2);
                 $table->timestamps();
             });
         }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vendor');
+        Schema::dropIfExists('barang');
     }
 };

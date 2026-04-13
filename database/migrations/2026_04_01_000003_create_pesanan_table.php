@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'role')) {
-                $table->string('role')->default('customer'); // customer or vendor
-            }
-        });
+        if (!Schema::hasTable('pesanan')) {
+            Schema::create('pesanan', function (Blueprint $table) {
+                $table->id();
+                $table->string('nama_pesanan')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -23,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
-        });
+        Schema::dropIfExists('pesanan');
     }
 };

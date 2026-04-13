@@ -29,7 +29,7 @@
                             <tr>
                                 <td>{{ $detail->nama_barang }}</td>
                                 <td>{{ $detail->jumlah }}</td>
-                                                <td>Rp {{ number_format($detail->harga ?? $detail->harga_barang ?? 0, 0, ',', '.') }}</td>
+                                <td>Rp {{ number_format($detail->harga ?? $detail->harga_barang ?? 0, 0, ',', '.') }}</td>
                                 <td>Rp {{ number_format($detail->subtotal ?? 0, 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
@@ -52,16 +52,23 @@
 
 
     <script src="https://app.sandbox.midtrans.com/snap/snap.js"
-        data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
+        data-client-key="{{ config('midtrans.client_key') }}"></script>
 
     <script>
         const payButton = document.getElementById('pay-button');
         const orderId = '{{ $penjualan->idpenjualan ?? 0 }}';
+        let snapOpen = false;
 
         if (payButton && orderId !== '0') {
-            payButton.addEventListener('click', async function () {
+            payButton.addEventListener('click', async function() {
+                if (snapOpen) {
+                    return;
+                }
+
+                payButton.disabled = true;
+
                 try {
-                    const res = await fetch('/checkout', {
+                    const res = await fetch("{{ route('payment.checkout') }}", {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -73,39 +80,70 @@
                         })
                     });
 
+                    const text = await res.text();
+                    let data = null;
+
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError, 'response:', text);
+                    }
+
                     if (!res.ok) {
-                        const errorText = await res.text();
-                        alert('Gagal mengambil token payment: ' + errorText);
+                        const message = data?.error || text || 'Unknown error';
+                        alert('Gagal mengambil token payment: ' + message);
+                        payButton.disabled = false;
                         return;
                     }
 
-                    const data = await res.json();
+                    if (!data || !data.snap_token) {
+                        const message = data?.error || 'Token Midtrans tidak tersedia. Cek konfigurasi server.';
+                        alert(message);
+                        payButton.disabled = false;
+                        return;
+                    }
 
                     if (!window.snap) {
                         alert('Midtrans snap.js belum siap. Coba refresh halaman.');
+                        payButton.disabled = false;
                         return;
                     }
 
-                    if (!data.snap_token) {
-                        alert('Token Midtrans tidak tersedia. Cek konfigurasi server.');
-                        return;
-                    }
-
+                    snapOpen = true;
                     window.snap.pay(data.snap_token, {
-                        onError: function (result) {
-                            alert('Pembayaran gagal. Cek konsol browser.');
-                            console.error(result);
+
+                        onSuccess: function(result) {
+                            console.log('SUCCESS:', result);
+
+                            window.location.href = "/pesanan/success/" + orderId;
                         },
-                        onClose: function () {
-                            alert('Pembayaran dibatalkan.');
+
+                        onPending: function(result) {
+                            console.log('PENDING:', result);
+                            alert('Menunggu pembayaran...');
+                        },
+
+                        onError: function(result) {
+                            console.error('Midtrans onError:', result);
+                            alert('Pembayaran gagal. Silakan coba lagi.');
+                            snapOpen = false;
+                            payButton.disabled = false;
+                        },
+
+                        onClose: function() {
+                            console.log('Midtrans popup closed');
+                            snapOpen = false;
+                            payButton.disabled = false;
                         }
                     });
                 } catch (error) {
-                    alert('Terjadi kesalahan saat memproses pembayaran.');
+                    alert('Terjadi kesalahan saat memproses pembayaran: ' + (error.message || error));
                     console.error(error);
+                    snapOpen = false;
+                    payButton.disabled = false;
                 }
             });
         }
     </script>
 
-@endsection
+    @endsection

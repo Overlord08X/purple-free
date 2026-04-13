@@ -92,6 +92,22 @@
         </div>
       </li>
       <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#CustomerMenu" aria-expanded="false" aria-controls="CustomerMenu">
+          <span class="menu-title">Customer</span>
+          <i class="mdi mdi-camera menu-icon"></i>
+        </a>
+        <div class="collapse" id="CustomerMenu">
+          <ul class="nav flex-column sub-menu">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('customer.blob') }}">Tambah Customer (BLOB)</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('customer.file') }}">Tambah Customer (FILE)</a>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" href="{{ route('payment.index') }}">
           <span class="menu-title">Payment</span>
           <i class="mdi mdi-credit-card menu-icon"></i>
@@ -122,6 +138,11 @@
             <li class="nav-item">
               <a class="nav-link" href="{{ route('project.pos') }}">
                 Point Of Sales (POS)
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.kantin') }}">
+                kantin
               </a>
             </li>
           </ul>

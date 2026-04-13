@@ -21,37 +21,6 @@
 
                 <h4 class="card-title">Transaksi Penjualan</h4>
 
-                <h5>Daftar Barang</h5>
-                <div class="table-responsive mb-4">
-                    <table class="table table-sm table-hover" id="tableBarang">
-                        <thead>
-                            <tr>
-                                <th>Kode</th>
-                                <th>Nama</th>
-                                <th>Harga</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($barangs as $barang)
-                            <tr>
-                                <td>{{ $barang->idbarang }}</td>
-                                <td>{{ $barang->nama_barang }}</td>
-                                <td>Rp {{ number_format($barang->harga_barang, 0, ',', '.') }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary pilih-barang" 
-                                            data-kode="{{ $barang->idbarang }}" 
-                                            data-nama="{{ $barang->nama_barang }}" 
-                                            data-harga="{{ $barang->harga_barang }}">
-                                        Pilih
-                                    </button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
                 <div class="row mb-3">
 
                     <div class="col-md-2">
@@ -71,7 +40,7 @@
                     </div>
 
                     <div class="col-md-2">
-                        <button type="button" id="btnTambah" class="btn btn-gradient-primary btn-block" disabled>
+                        <button id="btnTambah" class="btn btn-gradient-primary btn-block" disabled>
 
                             <span id="textTambah">Tambahkan</span>
 
@@ -125,13 +94,26 @@
 
                     <div class="col-md-6 text-end">
 
-                        <button type="button" id="btnBayar" class="btn btn-gradient-primary me-2">
+                        <button id="btnBayar" class="btn btn-gradient-success me-2">
 
                             <span id="textBayarAxios">
-                                <i class="mdi mdi-cash"></i> Lanjutkan Pembayaran
+                                <i class="mdi mdi-cash"></i> Bayar (Axios)
                             </span>
 
                             <span id="spinnerBayarAxios"
+                                class="spinner-border spinner-border-sm ms-2"
+                                style="display:none;"></span>
+
+                        </button>
+
+
+                        <button id="btnBayarAjax" class="btn btn-gradient-primary">
+
+                            <span id="textBayarAjax">
+                                <i class="mdi mdi-cash"></i> Bayar (Ajax)
+                            </span>
+
+                            <span id="spinnerBayarAjax"
                                 class="spinner-border spinner-border-sm ms-2"
                                 style="display:none;"></span>
 

@@ -11,12 +11,15 @@ use App\Http\Controllers\tagHarga\tagHargaController as TagHargaController;
 use App\Http\Controllers\project\projectController;
 use App\Http\Controllers\project\wilayahController;
 use App\Http\Controllers\project\posController;
+use App\Http\Controllers\project\kantinController;
 use App\Http\Controllers\payment\pesananController;
 use App\Http\Controllers\payment\vendorController;
 use App\Http\Controllers\barang\barangController as BarangController;
 use App\Http\Controllers\payment\paymentController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\qrcode\qrcodeController;
 
-Route::redirect('/', '/pesanan');
+Route::redirect('/', '/dashboard');
 
 Auth::routes();
 
@@ -29,10 +32,23 @@ Route::get('/otp', [LoginController::class, 'showOtpForm'])->name('otp.form');
 Route::post('/otp/verify', [LoginController::class, 'verifyOtp'])->name('otp.verify');
 
 // Pesanan Routes (public)
-Route::get('/pesanan', [pesananController::class, 'index'])->name('pesanan.index');
-Route::get('/pesanan/menus/{vendorId}', [pesananController::class, 'getMenus'])->name('pesanan.menus');
-Route::post('/pesanan/store', [pesananController::class, 'store'])->name('pesanan.store');
-Route::get('/pesanan/payment/{id}', [pesananController::class, 'payment'])->name('pesanan.payment');
+Route::prefix('pesanan')->group(function () {
+    Route::get('/', [pesananController::class, 'index'])->name('pesanan.index');
+    Route::get('/menus/{vendorId}', [pesananController::class, 'getMenus']);
+    Route::post('/store', [pesananController::class, 'store']);
+    Route::get('/payment/{id}', [pesananController::class, 'payment'])->name('pesanan.payment');
+    Route::get('/success/{id}', [pesananController::class, 'success'])->name('pesanan.success');
+
+    Route::post('/checkout', [pesananController::class, 'checkout'])->name('pesanan.checkout');
+    Route::post('/callback', [pesananController::class, 'callback']);
+});
+
+// Customer Routes (public)
+Route::get('/customer/blob', [CustomerController::class, 'indexBlob'])->name('customer.blob');
+Route::post('/customer/blob', [CustomerController::class, 'storeBlob']);
+Route::get('/customer/file', [CustomerController::class, 'indexFile'])->name('customer.file');
+Route::post('/customer/file', [CustomerController::class, 'storeFile']);
+Route::get('/customer/blob/{id}', [CustomerController::class, 'showBlob'])->name('customer.show.blob');
 
 // Protected Routes
 Route::middleware(['auth', 'check.session'])->group(function () {
@@ -70,15 +86,25 @@ Route::middleware(['auth', 'check.session'])->group(function () {
     Route::get('/kelurahan/{id}', [wilayahController::class, 'kelurahan']);
 
     Route::get('/pos', [posController::class, 'index'])->name('project.pos');
+    Route::get('/kantin', [kantinController::class, 'index'])->name('project.kantin');
 
     Route::get('/barang/{kode}', function ($kode) {
         $barang = \App\Models\Barang::where('idbarang', $kode)->first();
         return response()->json($barang); // penting: JSON
     });
 
-    Route::post('/transaksi', [posController::class, 'simpan']);
+    Route::post('/transaksi', [kantinController::class, 'simpan']);
 
-    Route::get('/payment/{idpenjualan?}', [paymentController::class, 'index'])->name('payment.index');
-    Route::post('/checkout', [paymentController::class, 'checkout'])->name('payment.checkout');
-    Route::post('/payment/callback', [paymentController::class, 'callback'])->name('payment.callback');
+    Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
+    Route::get('/barang/cetak/{id}', [BarangController::class, 'cetakPDF'])->name('barang.cetak');
+
+    Route::prefix('payment')->group(function () {
+        Route::get('/{id?}', [paymentController::class, 'index'])->name('payment.index');
+        Route::post('/checkout', [paymentController::class, 'checkout'])->name('payment.checkout');
+        Route::post('/callback', [paymentController::class, 'callback']);
+    });
+
+    Route::get('/qrcode', [qrcodeController::class, 'index'])->name('qrcode.index');
+    Route::get('/qrcode/{id}', [qrcodeController::class, 'show'])->name('qrcode.show');
+    Route::post('/qrcode', [qrcodeController::class, 'store'])->name('qrcode.store');
 });
