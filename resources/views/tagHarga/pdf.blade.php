@@ -35,6 +35,8 @@
             float: left;
             margin-right: 0.3cm; /* jarak horizontal */
             box-sizing: border-box;
+            background: #fff;
+            padding: 1mm 1.5mm;
 
             /* CENTER PERFECT */
             display: flex;
@@ -50,9 +52,9 @@
         }
 
         .barcode {
-            width: 100%;
-            height: 6px;
-            margin-bottom: 1px;
+            width: 32mm;
+            height: auto;
+            margin-bottom: 1mm;
         }
 
         .kode {
@@ -89,18 +91,24 @@
                         @if(isset($labels[$index]) && $labels[$index])
                             @php
                                 $generator = new Picqer\Barcode\BarcodeGeneratorPNG();
-                                $barcode = base64_encode($generator->getBarcode($labels[$index]->idbarang, $generator::TYPE_CODE_128));
+                                // Increase module width/height so bars are scanner-friendly on printed labels.
+                                $barcode = base64_encode($generator->getBarcode($labels[$index]->code, $generator::TYPE_CODE_128, 2, 42));
                             @endphp
                             <img src="data:image/png;base64,{{ $barcode }}" class="barcode" />
                             <div class="kode">
-                                {{ $labels[$index]->idbarang }}
+                                {{ $labels[$index]->code }}
                             </div>
                             <div class="nama">
-                                {{ $labels[$index]->nama_barang }}
+                                {{ $labels[$index]->name }}
                             </div>
                             <div class="harga">
-                                Rp {{ number_format($labels[$index]->harga_barang, 0, ',', '.') }}
+                                Rp {{ number_format($labels[$index]->price, 0, ',', '.') }}
                             </div>
+                            @if(!empty($labels[$index]->vendor_name))
+                                <div class="kode" style="font-size:5px; margin-top:1px;">
+                                    {{ $labels[$index]->vendor_name }}
+                                </div>
+                            @endif
                         @endif
                     </div>
 

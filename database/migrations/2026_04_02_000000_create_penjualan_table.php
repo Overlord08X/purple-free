@@ -13,9 +13,14 @@ return new class extends Migration
     {
         if (!Schema::hasTable('penjualan')) {
             Schema::create('penjualan', function (Blueprint $table) {
-                $table->id('idpenjualan');
-                $table->string('nama_penjualan')->nullable();
-                $table->timestamps();
+                $table->increments('idpenjualan');
+                $table->timestamp('created_at');
+                $table->integer('total');
+                $table->string('order_id')->nullable();
+                $table->string('transaction_id')->nullable();
+                $table->string('payment_type')->nullable();
+                $table->json('payment_details')->nullable();
+                $table->smallInteger('status_bayar')->default(0);
             });
         }
     }

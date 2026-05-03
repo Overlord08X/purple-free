@@ -5,114 +5,9 @@
 @section('content')
 <div class="main-panel">
     <div class="content-wrapper">
-        <style>
-            .payment-pagination .pagination {
-                margin-bottom: 0;
-                font-size: 0.875rem;
-            }
 
-            .payment-pagination .page-link {
-                padding: 0.35rem 0.7rem;
-                line-height: 1;
-            }
-
-            .payment-pagination svg {
-                width: 0.9rem;
-                height: 0.9rem;
-            }
-        </style>
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-
-        @if(!empty($transactions))
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h4 class="card-title mb-0">Semua Transaksi</h4>
-                        <small class="text-muted">Klik untuk lanjut bayar, edit, atau hapus transaksi.</small>
-                    </div>
-                    <a href="{{ route('project.kantin') }}" class="btn btn-gradient-primary">Buat Transaksi Baru</a>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Tanggal</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Order ID</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($transactions as $transaction)
-                                <tr>
-                                    <td>#{{ $transaction->idpenjualan }}</td>
-                                    <td>{{ $transaction->created_at }}</td>
-                                    <td>Rp {{ number_format($transaction->total, 0, ',', '.') }}</td>
-                                    <td>
-                                        @if((int) $transaction->status_bayar === 1)
-                                            <span class="badge bg-success">Lunas</span>
-                                        @else
-                                            <span class="badge bg-warning text-dark">Pending</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-truncate" style="max-width: 240px;">{{ $transaction->order_id ?? '-' }}</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ route('payment.index', ['id' => $transaction->idpenjualan]) }}" class="btn btn-success">Lihat / Bayar</a>
-                                            <a href="{{ route('payment.edit', $transaction->idpenjualan) }}" class="btn btn-primary">Edit</a>
-                                            <form action="{{ route('payment.destroy', $transaction->idpenjualan) }}" method="POST" onsubmit="return confirm('Hapus transaksi ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger">Hapus</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">Belum ada transaksi.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mt-3">
-                    <div class="payment-pagination d-flex justify-content-center">
-                        {{ $transactions->links('pagination::bootstrap-5') }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        @if($penjualan)
         <div class="card">
             <div class="card-body text-center">
-                <div class="d-flex justify-content-between align-items-center mb-3 text-start">
-                    <div>
-                        <h4 class="card-title mb-0">Transaksi #{{ $penjualan->idpenjualan }}</h4>
-                        <small class="text-muted">Detail transaksi aktif</small>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <a href="{{ route('payment.edit', $penjualan->idpenjualan) }}" class="btn btn-primary">Edit</a>
-                        <form action="{{ route('payment.destroy', $penjualan->idpenjualan) }}" method="POST" onsubmit="return confirm('Hapus transaksi ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Hapus</button>
-                        </form>
-                    </div>
-                </div>
 
                 @if(request()->query('paid') == '1')
                 <div class="alert alert-success">
@@ -126,7 +21,7 @@
                     <p class="text-muted">Simpan QR ini sebagai bukti transaksi.</p>
                     <img src="{{ $qrCodeDataUri }}" alt="QR Code Transaksi" style="max-width:260px; width:100%; height:auto;">
                     <div class="mt-2">
-                        <small class="text-muted">ID Pesanan: {{ $penjualan->idpenjualan ?? '-' }}</small>
+                        <small class="text-muted">ID Transaksi: {{ $penjualan->idpenjualan ?? '-' }}</small>
                     </div>
                 </div>
                 @endif
@@ -134,17 +29,8 @@
                 <h3>Total Bayar</h3>
                 <h1 class="text-success">Rp {{ number_format($penjualan->total ?? 0, 0, ',', '.') }}</h1>
 
-                <p class="mb-2">
-                    <strong>Status Bayar:</strong>
-                    @if((int) $penjualan->status_bayar === 1)
-                        <span class="badge bg-success">Lunas</span>
-                    @else
-                        <span class="badge bg-warning text-dark">Pending</span>
-                    @endif
-                </p>
-
                 <h4>Detail Pembelian</h4>
-                @if(count($details) > 0)
+                @if($penjualan && count($details) > 0)
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <thead>
@@ -172,12 +58,9 @@
                         </tbody>
                     </table>
                 </div>
-
-                @if((int) $penjualan->status_bayar !== 1)
                 <button id="pay-button" class="btn btn-success mt-3">
                     Bayar Sekarang
                 </button>
-                @endif
                 @else
                 <div class="alert alert-warning">
                     Tidak ada data transaksi. Silakan kembali ke POS dan pilih barang atau menu terlebih dahulu.
@@ -186,14 +69,13 @@
 
             </div>
         </div>
-        @endif
 
     </div>
+
 
     <script src="https://app.sandbox.midtrans.com/snap/snap.js"
         data-client-key="{{ config('midtrans.client_key') }}"></script>
 
-    @if($penjualan && (int) $penjualan->status_bayar !== 1)
     <script>
         const payButton = document.getElementById('pay-button');
         const orderId = '{{ $penjualan->idpenjualan ?? 0 }}';
@@ -286,6 +168,5 @@
             });
         }
     </script>
-    @endif
 
     @endsection

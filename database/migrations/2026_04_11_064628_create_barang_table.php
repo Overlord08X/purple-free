@@ -13,10 +13,12 @@ return new class extends Migration
     {
         if (!Schema::hasTable('barang')) {
             Schema::create('barang', function (Blueprint $table) {
-                $table->bigIncrements('idbarang'); // PRIMARY KEY custom
-                $table->string('nama_barang');
-                $table->decimal('harga_barang', 15, 2);
-                $table->timestamps();
+                $table->string('idbarang', 8);
+                $table->string('nama_barang', 50);
+                $table->integer('harga_barang');
+                $table->timestamp('created_at');
+                
+                $table->primary('idbarang');
             });
         }
     }

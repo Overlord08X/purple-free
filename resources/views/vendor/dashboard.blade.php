@@ -6,9 +6,28 @@
 
     <div class="row">
         <div class="col-md-6">
+            <h3>Tambah Vendor</h3>
+            <form action="{{ route('project.vendor.store') }}" method="POST" class="mb-4">
+                @csrf
+                <div class="form-group">
+                    <label>Nama Vendor</label>
+                    <input type="text" name="nama_vendor" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-success">Tambah Vendor</button>
+            </form>
+
             <h3>Tambah Menu</h3>
             <form action="{{ route('vendor.menu.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
+                <div class="form-group">
+                    <label>Vendor</label>
+                    <select name="vendor_id" class="form-control" required>
+                        <option value="">-- Pilih Vendor --</option>
+                        @foreach($vendors as $vendor)
+                            <option value="{{ $vendor->idvendor }}">{{ $vendor->nama_vendor }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Nama Menu</label>
                     <input type="text" name="nama_menu" class="form-control" required>
@@ -26,12 +45,13 @@
         </div>
 
         <div class="col-md-6">
-            <h3>Menu Saya</h3>
+            <h3>Daftar Menu</h3>
             @foreach($menus as $menu)
                 <div class="card mb-2">
                     <div class="card-body">
                         <h5>{{ $menu->nama_menu }}</h5>
                         <p>Rp {{ number_format($menu->harga) }}</p>
+                        <p>Vendor: {{ $menu->vendor->nama_vendor ?? '-' }}</p>
                         <form action="{{ route('vendor.menu.destroy', $menu->idmenu) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
@@ -52,7 +72,7 @@
                 <p>Total: Rp {{ number_format($pesanan->total) }}</p>
                 <ul>
                     @foreach($pesanan->detail as $detail)
-                        <li>{{ $detail->menu->nama_menu }} x {{ $detail->jumlah }}</li>
+                        <li>{{ $detail->menu->nama_menu }} x {{ $detail->jumlah }} ({{ $detail->menu->vendor->nama_vendor ?? '-' }})</li>
                     @endforeach
                 </ul>
             </div>

@@ -10,6 +10,11 @@
             <p>Nama: {{ $pesanan->nama }}</p>
             <p>Total: Rp {{ number_format($pesanan->total) }}</p>
             <p>Status: <span class="text-success">Berhasil</span></p>
+            <p>
+                <a href="{{ route('project.customer', $pesanan->idpesanan) }}" class="btn btn-secondary mb-3">
+                    Buka Halaman QR Customer
+                </a>
+            </p>
 
             <h6>QR Code Pesanan:</h6>
             <img src="{{ $qrCodeDataUri }}" alt="QR Code" style="width: 200px; height: 200px;" />

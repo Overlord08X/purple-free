@@ -42,15 +42,20 @@ class posController extends Controller
                 RETURNING idpenjualan
             ", [$total])->idpenjualan;
 
+            $nextDetailId = (int) DB::table('penjualan_detail')->max('idpenjualan_detail') + 1;
+
             // INSERT detail
             foreach ($request->items as $item) {
 
                 DB::table('penjualan_detail')->insert([
+                    'idpenjualan_detail' => $nextDetailId,
                     'idpenjualan' => $idpenjualan,
                     'idbarang' => $item['kode'],
                     'jumlah' => $item['jumlah'],
                     'subtotal' => $item['subtotal']
                 ]);
+
+                $nextDetailId++;
             }
 
             DB::commit();

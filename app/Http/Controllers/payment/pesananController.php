@@ -228,7 +228,21 @@ class pesananController extends Controller
 
     public function callback(Request $request)
     {
-        $serverKey = config('midtrans.server_key');
+        Log::info('PESANAN CALLBACK HIT', [
+            'method' => $request->method(),
+            'order_id' => $request->order_id,
+            'transaction_status' => $request->transaction_status,
+            'status_code' => $request->status_code,
+        ]);
+
+        if ($request->isMethod('get')) {
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'Callback endpoint is active',
+            ]);
+        }
+
+        $serverKey = config('midtrans.server_key') ?: env('MIDTRANS_SERVER_KEY');
 
         $hashed = hash(
             'sha512',
@@ -239,6 +253,35 @@ class pesananController extends Controller
         );
 
         if ($hashed == $request->signature_key) {
+
+            // Support alur kantin: order_id format SALE-{idpenjualan}-timestamp
+            if (preg_match('/^SALE-(\d+)-/', (string) $request->order_id, $m)) {
+                $idpenjualan = (int) $m[1];
+
+                if (in_array($request->transaction_status, ['settlement', 'capture'])) {
+                    $updateData = [
+                        'status_bayar' => 1,
+                        'transaction_id' => $request->transaction_id,
+                        'payment_type' => $request->payment_type,
+                        'payment_details' => json_encode($request->all()),
+                    ];
+
+                    if (\Schema::hasColumn('penjualan', 'order_id')) {
+                        $updateData['order_id'] = $request->order_id;
+                    }
+
+                    DB::table('penjualan')
+                        ->where('idpenjualan', $idpenjualan)
+                        ->update($updateData);
+
+                    Log::info('PESANAN CALLBACK UPDATED PENJUALAN', [
+                        'idpenjualan' => $idpenjualan,
+                        'order_id' => $request->order_id,
+                    ]);
+                }
+
+                return response()->json(['status' => 'ok']);
+            }
 
             $pesanan = Pesanan::where('order_id', $request->order_id)->first();
 
@@ -252,13 +295,18 @@ class pesananController extends Controller
                 $qrImage = $writer->write($qrCode)->getDataUri();
 
                 $pesanan->update([
-                    'status_bayar' => 0,
+                    'status_bayar' => 1,
                     'transaction_id' => $request->transaction_id,
                     'payment_type' => $request->payment_type,
                     'payment_details' => json_encode($request->all()),
                     'qr_code' => $qrImage
                 ]);
             }
+        } else {
+            Log::warning('PESANAN CALLBACK INVALID SIGNATURE', [
+                'order_id' => $request->order_id,
+                'transaction_status' => $request->transaction_status,
+            ]);
         }
 
         return response()->json(['status' => 'ok']);

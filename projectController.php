@@ -9,7 +9,6 @@ use App\Models\Pesanan;
 use App\Models\DetailPesanan;
 use App\Models\Menu;
 use App\Models\Vendor;
-use Illuminate\Support\Facades\Log;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
@@ -43,46 +42,6 @@ class projectController extends Controller
             $penjualan = DB::table('penjualan')->where('idpenjualan', $orderId)->first();
 
             if ($penjualan) {
-                // Fallback sync: if callback missed, re-check payment status to Midtrans.
-                if ((int) $penjualan->status_bayar !== 1 && !empty($penjualan->order_id)) {
-                    try {
-                        \Midtrans\Config::$serverKey = config('midtrans.server_key') ?: env('MIDTRANS_SERVER_KEY');
-                        \Midtrans\Config::$isProduction = false;
-                        \Midtrans\Config::$curlOptions = [
-                            CURLOPT_SSL_VERIFYPEER => false,
-                            CURLOPT_SSL_VERIFYHOST => 0,
-                        ];
-
-                        $status = $this->fetchMidtransStatus((string) $penjualan->order_id);
-
-                        Log::info('CUSTOMER PAGE MIDTRANS STATUS', [
-                            'idpenjualan' => $penjualan->idpenjualan,
-                            'order_id' => $penjualan->order_id,
-                            'transaction_status' => $status['transaction_status'] ?? null,
-                            'status_code' => $status['status_code'] ?? null,
-                        ]);
-
-                        if (in_array($status['transaction_status'] ?? null, ['settlement', 'capture'])) {
-                            DB::table('penjualan')
-                                ->where('idpenjualan', $penjualan->idpenjualan)
-                                ->update([
-                                    'status_bayar' => 1,
-                                    'transaction_id' => $status['transaction_id'] ?? $penjualan->transaction_id,
-                                    'payment_type' => $status['payment_type'] ?? $penjualan->payment_type,
-                                    'payment_details' => json_encode($status),
-                                ]);
-
-                            $penjualan = DB::table('penjualan')->where('idpenjualan', $orderId)->first();
-                        }
-                    } catch (\Throwable $e) {
-                        Log::warning('CUSTOMER PAGE MIDTRANS SYNC FAILED', [
-                            'idpenjualan' => $penjualan->idpenjualan,
-                            'order_id' => $penjualan->order_id,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
-                }
-
                 // Get detail penjualan dengan info barang/menu
                 $details = DB::table('penjualan_detail')
                     ->leftJoin('barang', 'penjualan_detail.idbarang', '=', 'barang.idbarang')
@@ -195,8 +154,7 @@ class projectController extends Controller
                 'penjualan_detail.idmenu',
                 'menu.nama_menu',
                 'penjualan_detail.jumlah',
-                // penjualan_detail.harga doesn't exist; use menu.harga as harga
-                DB::raw('menu.harga as harga'),
+                'penjualan_detail.harga',
                 'penjualan_detail.subtotal'
             )
             ->get();
@@ -224,41 +182,5 @@ class projectController extends Controller
             'items' => $items,
             'total_vendor' => $items->sum('subtotal'),
         ]);
-    }
-
-    private function fetchMidtransStatus(string $orderId): array
-    {
-        $isProduction = (bool) config('midtrans.is_production', false);
-        $baseUrl = $isProduction
-            ? 'https://api.midtrans.com'
-            : 'https://api.sandbox.midtrans.com';
-
-        $serverKey = config('midtrans.server_key') ?: env('MIDTRANS_SERVER_KEY');
-        $url = $baseUrl . '/v2/' . urlencode($orderId) . '/status';
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 15,
-            CURLOPT_HTTPHEADER => [
-                'Accept: application/json',
-                'Authorization: Basic ' . base64_encode($serverKey . ':'),
-            ],
-        ]);
-
-        $raw = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($raw === false || $err) {
-            throw new \RuntimeException('Failed fetch Midtrans status: ' . $err);
-        }
-
-        $decoded = json_decode($raw, true);
-        if (!is_array($decoded)) {
-            throw new \RuntimeException('Invalid Midtrans status response');
-        }
-
-        return $decoded;
     }
 }

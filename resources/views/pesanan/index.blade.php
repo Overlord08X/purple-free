@@ -16,6 +16,10 @@
         </div>
     </div>
 
+    <div class="mt-3">
+        <a href="{{ route('project.vendor') }}" class="btn btn-outline-primary">Kelola Vendor & Menu</a>
+    </div>
+
     <div id="menu-section" style="display: none;">
         <h3>Menu</h3>
         <div id="menu-list" class="row"></div>

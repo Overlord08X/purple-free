@@ -4,51 +4,96 @@ $.ajaxSetup({
     },
 });
 
-let barangFound = false;
-
 $("#btnTambah").prop("disabled", true);
+
+let currentItemType = "barang";
+let currentItemId = null;
+let currentItemCode = null;
 
 function rupiah(n) {
     return new Intl.NumberFormat("id-ID").format(n);
 }
 
-// PILIH BARANG DARI TABEL
-$("#tableBarang").on("click", ".pilih-barang", function () {
-    let kode = $(this).data("kode");
-    let nama = $(this).data("nama");
-    let harga = $(this).data("harga");
+function loadItem(kode) {
+    return $.get("/kantin/item/" + kode);
+}
 
-    $("#idBarang").val(kode);
-    $("#namaBarang").val(nama);
-    $("#hargaBarang").val(harga);
+function fillItem(data) {
+    if (!data) {
+        Swal.fire({
+            icon: "error",
+            title: "Item tidak ditemukan",
+        });
+        return;
+    }
+
+    currentItemType = data.type || "barang";
+    currentItemId = data.id;
+    currentItemCode = data.code || data.id;
+
+    $("#idBarang").val(currentItemCode);
+    $("#namaBarang").val(data.name || data.nama_barang || data.nama_menu);
+    $("#hargaBarang").val(data.price || data.harga_barang || data.harga);
     $("#jumlah").val(1);
 
     $("#btnTambah").prop("disabled", false);
+}
+
+// PILIH BARANG DARI TABEL
+$("#tableBarang").on("click", ".pilih-barang", function () {
+    fillItem({
+        type: $(this).data("type") || "barang",
+        id: $(this).data("id") || $(this).data("kode"),
+        code: $(this).data("code") || $(this).data("kode"),
+        name: $(this).data("name") || $(this).data("nama"),
+        price: $(this).data("price") || $(this).data("harga"),
+    });
 });
 
-// AUTO CARI BARANG
+// PILIH MENU DARI TABEL
+$("#tableMenu").on("click", ".pilih-menu", function () {
+    fillItem({
+        type: $(this).data("type") || "menu",
+        id: $(this).data("id"),
+        code: $(this).data("code"),
+        name: $(this).data("name"),
+        price: $(this).data("price"),
+    });
+});
+
+// FILTER MENU BY VENDOR
+$("#filterVendorMenu").on("change", function () {
+    const vendorId = $(this).val();
+
+    $("#tableMenu tbody tr").each(function () {
+        const rowVendor = String($(this).data("vendor"));
+        if (vendorId === "all" || vendorId === rowVendor) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+});
+
+// AUTO CARI BARANG/MENU
 $("#idBarang").keypress(function (e) {
     if (e.which == 13) {
         let kode = $(this).val();
 
-        $.get("/barang/" + kode, function (data) {
-            if (data) {
-                $("#namaBarang").val(data.nama_barang);
-                $("#hargaBarang").val(data.harga_barang);
-                $("#jumlah").val(1);
-
-                $("#btnTambah").prop("disabled", false);
-            } else {
+        loadItem(kode)
+            .done(function (data) {
+                fillItem(data);
+            })
+            .fail(function () {
                 Swal.fire({
                     icon: "error",
-                    title: "Barang tidak ditemukan",
+                    title: "Item tidak ditemukan",
                 });
-            }
-        });
+            });
     }
 });
 
-// TAMBAH BARANG
+// TAMBAH BARANG/MENU
 $("#btnTambah").click(function () {
     $("#spinnerTambah").show();
     $("#textTambah").text("Menambahkan...");
@@ -59,6 +104,8 @@ $("#btnTambah").click(function () {
         let nama = $("#namaBarang").val();
         let harga = parseInt($("#hargaBarang").val());
         let jumlah = parseInt($("#jumlah").val());
+        let type = currentItemType || "barang";
+        let id = currentItemId || kode;
 
         if (jumlah <= 0) {
             Swal.fire({
@@ -92,7 +139,7 @@ $("#btnTambah").click(function () {
 
         if (!exist) {
             $("#tablePOS tbody").append(`
-            <tr>
+            <tr data-type="${type}" data-id="${id}">
                 <td>${kode}</td>
                 <td>${nama}</td>
                 <td>${rupiah(harga)}</td>
@@ -159,6 +206,10 @@ function clearInput() {
     $("#hargaBarang").val("");
     $("#jumlah").val(1);
 
+    currentItemType = "barang";
+    currentItemId = null;
+    currentItemCode = null;
+
     $("#btnTambah").prop("disabled", true);
 }
 
@@ -172,7 +223,9 @@ $("#btnBayar").click(function () {
 
     $("#tablePOS tbody tr").each(function () {
         items.push({
-            kode: $(this).find("td:eq(0)").text(),
+            type: $(this).data("type") || "barang",
+            id: $(this).data("id") || $(this).find("td:eq(0)").text(),
+            code: $(this).find("td:eq(0)").text(),
             jumlah: $(this).find(".jumlah").val(),
             subtotal: $(this).find(".subtotal").text().replace(/\./g, ""),
         });
@@ -194,12 +247,6 @@ $("#btnBayar").click(function () {
             items: items,
         })
         .then(function (response) {
-            console.log("FULL RESPONSE:", response);
-            console.log("DATA:", response.data);
-
-            console.log("RESPONSE:", response.data); // 🔥 DEBUG WAJIB
-
-            // ✅ FIX SAFETY CHECK
             if (response.data && response.data.redirect) {
                 window.location.href = response.data.redirect;
             } else {
@@ -211,11 +258,15 @@ $("#btnBayar").click(function () {
             }
         })
         .catch(function (error) {
-            console.log(error);
+            const serverMessage =
+                error.response?.data?.error ||
+                error.response?.data?.message ||
+                "Gagal menyimpan transaksi";
 
             Swal.fire({
                 icon: "error",
                 title: "Gagal menyimpan transaksi",
+                text: serverMessage,
             });
         })
         .finally(function () {
@@ -233,7 +284,9 @@ $("#btnBayarAjax").click(function () {
 
     $("#tablePOS tbody tr").each(function () {
         items.push({
-            kode: $(this).find("td:eq(0)").text(),
+            type: $(this).data("type") || "barang",
+            id: $(this).data("id") || $(this).find("td:eq(0)").text(),
+            code: $(this).find("td:eq(0)").text(),
             jumlah: $(this).find(".jumlah").val(),
             subtotal: $(this).find(".subtotal").text().replace(/\./g, ""),
         });

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Menu;
 use App\Models\Pesanan;
+use App\Models\Vendor;
 use Illuminate\Support\Facades\Auth;
 
 class vendorController extends Controller
@@ -17,29 +18,21 @@ class vendorController extends Controller
 
     public function dashboard()
     {
-        // Asumsi vendor_id disimpan di user atau cari cara lain
-        // Untuk sementara, asumsikan user id = vendor id
-        $vendorId = Auth::id();
+        $vendors = Vendor::orderBy('nama_vendor')->get();
+        $menus = Menu::with('vendor')->orderBy('nama_menu')->get();
+        $pesananLunas = Pesanan::where('status_bayar', 1)->with('detail.menu.vendor')->get();
 
-        $menus = Menu::where('idvendor', $vendorId)->get();
-        $pesananLunas = Pesanan::whereHas('detail', function($q) use ($vendorId) {
-            $q->whereHas('menu', function($qq) use ($vendorId) {
-                $qq->where('idvendor', $vendorId);
-            });
-        })->where('status_bayar', 1)->with('detail.menu')->get();
-
-        return view('vendor.dashboard', compact('menus', 'pesananLunas'));
+        return view('vendor.dashboard', compact('vendors', 'menus', 'pesananLunas'));
     }
 
     public function storeMenu(Request $request)
     {
         $request->validate([
+            'vendor_id' => 'required|exists:vendor,idvendor',
             'nama_menu' => 'required',
             'harga' => 'required|integer',
             'path_gambar' => 'nullable|image'
         ]);
-
-        $vendorId = Auth::id();
 
         $path = null;
         if ($request->hasFile('path_gambar')) {
@@ -50,7 +43,7 @@ class vendorController extends Controller
             'nama_menu' => $request->nama_menu,
             'harga' => $request->harga,
             'path_gambar' => $path,
-            'idvendor' => $vendorId
+            'idvendor' => $request->vendor_id
         ]);
 
         return back()->with('success', 'Menu added');

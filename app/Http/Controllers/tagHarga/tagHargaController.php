@@ -5,6 +5,7 @@ namespace App\Http\Controllers\tagHarga;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Barang;
+use App\Models\Menu;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class tagHargaController extends Controller
@@ -12,7 +13,9 @@ class tagHargaController extends Controller
     public function index()
     {
         $barang = Barang::orderBy('nama_barang')->get();
-        return view('tagHarga.index', compact('barang'));
+        $menu = Menu::with('vendor')->orderBy('nama_menu')->get();
+
+        return view('tagHarga.index', compact('barang', 'menu'));
     }
 
     public function cetak(Request $request)
@@ -36,12 +39,22 @@ class tagHargaController extends Controller
         foreach ($request->items as $item) {
 
             // 🔥 AMAN dari undefined key
-            if (!isset($item['id']) || !isset($item['qty'])) {
+            if (!isset($item['id']) || !isset($item['qty']) || !isset($item['type'])) {
                 continue;
             }
 
-            $barang = Barang::where('idbarang', $item['id'])->first();
-            if (!$barang) {
+            $source = null;
+            $code = null;
+
+            if ($item['type'] === 'barang') {
+                $source = Barang::where('idbarang', $item['id'])->first();
+                $code = $source?->idbarang;
+            } elseif ($item['type'] === 'menu') {
+                $source = Menu::with('vendor')->where('idmenu', $item['id'])->first();
+                $code = $source ? 'MNU' . str_pad((string) $source->idmenu, 5, '0', STR_PAD_LEFT) : null;
+            }
+
+            if (!$source || !$code) {
                 continue;
             }
 
@@ -57,7 +70,13 @@ class tagHargaController extends Controller
                     break 2; // keluar dari dua loop
                 }
 
-                $labels[$currentIndex] = $barang;
+                $labels[$currentIndex] = (object) [
+                    'type' => $item['type'],
+                    'code' => $code,
+                    'name' => $item['type'] === 'barang' ? $source->nama_barang : $source->nama_menu,
+                    'price' => $item['type'] === 'barang' ? $source->harga_barang : $source->harga,
+                    'vendor_name' => $item['type'] === 'menu' ? ($source->vendor->nama_vendor ?? '-') : null,
+                ];
                 $currentIndex++;
             }
         }

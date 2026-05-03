@@ -40,7 +40,7 @@ Route::prefix('pesanan')->group(function () {
     Route::get('/success/{id}', [pesananController::class, 'success'])->name('pesanan.success');
 
     Route::post('/checkout', [pesananController::class, 'checkout'])->name('pesanan.checkout');
-        Route::match(['get', 'post'], '/callback', [pesananController::class, 'callback']);
+    Route::post('/callback', [pesananController::class, 'callback']);
 });
 
 // Customer Routes (public)
@@ -50,7 +50,6 @@ Route::get('/customer/file', [CustomerController::class, 'indexFile'])->name('cu
 Route::post('/customer/file', [CustomerController::class, 'storeFile']);
 Route::get('/customer/blob/{id}', [CustomerController::class, 'showBlob'])->name('customer.show.blob');
 Route::get('/project/customer/{idpesanan?}', [projectController::class, 'customer'])->name('project.customer');
-Route::match(['get', 'post'], '/midtrans/callback', [paymentController::class, 'callback'])->name('midtrans.callback');
 
 // Protected Routes
 Route::middleware(['auth', 'check.session'])->group(function () {
@@ -110,9 +109,6 @@ Route::middleware(['auth', 'check.session'])->group(function () {
 
     Route::prefix('payment')->group(function () {
         Route::get('/{id?}', [paymentController::class, 'index'])->name('payment.index');
-        Route::get('/{id}/edit', [paymentController::class, 'edit'])->name('payment.edit');
-        Route::put('/{id}', [paymentController::class, 'update'])->name('payment.update');
-        Route::delete('/{id}', [paymentController::class, 'destroy'])->name('payment.destroy');
         Route::post('/checkout', [paymentController::class, 'checkout'])->name('payment.checkout');
         Route::post('/callback', [paymentController::class, 'callback']);
     });

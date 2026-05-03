@@ -16,6 +16,15 @@ class barangController extends Controller
         return view('barang.index', compact('barangs'));
     }
 
+    private function generateIdBarang(): string
+    {
+        $lastId = DB::table('barang')
+            ->selectRaw("COALESCE(MAX(CAST(SUBSTRING(idbarang FROM 4) AS INTEGER)), 0) as last_number")
+            ->value('last_number');
+
+        return 'BRG' . str_pad(((int) $lastId + 1), 5, '0', STR_PAD_LEFT);
+    }
+
     // Simpan data baru
     public function store(Request $request)
     {
@@ -24,8 +33,8 @@ class barangController extends Controller
             'harga_barang' => 'required|numeric',
         ]);
 
-        // Trigger DB akan generate idbarang
         Barang::create([
+            'idbarang' => $this->generateIdBarang(),
             'nama_barang' => $request->nama_barang,
             'harga_barang' => $request->harga_barang,
             'created_at' => now(),

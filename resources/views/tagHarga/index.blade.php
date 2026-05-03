@@ -21,42 +21,98 @@
             <div class="card">
                 <div class="card-body">
 
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th width="5%">
-                                    <input type="checkbox" id="checkAll">
-                                </th>
-                                <th>ID</th>
-                                <th>Nama</th>
-                                <th>Harga</th>
-                                <th width="15%">Qty Cetak</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($barang as $b)
-                            <tr>
-                                <td>
-                                    <input type="checkbox"
-                                        name="items[{{ $b->idbarang }}][id]"
-                                        value="{{ $b->idbarang }}"
-                                        class="check-item">
-                                </td>
-                                <td>{{ $b->idbarang }}</td>
-                                <td>{{ $b->nama_barang }}</td>
-                                <td>Rp {{ number_format($b->harga_barang) }}</td>
-                                <td>
-                                    <input type="number"
-                                        name="items[{{ $b->idbarang }}][qty]"
-                                        class="form-control qty-input"
-                                        min="1"
-                                        value="1"
-                                        disabled>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <ul class="nav nav-tabs mb-3" id="tagHargaTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="barang-tab" data-bs-toggle="tab" data-bs-target="#barang-pane" type="button" role="tab">Barang</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="menu-tab" data-bs-toggle="tab" data-bs-target="#menu-pane" type="button" role="tab">Menu</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="tagHargaTabContent">
+                        <div class="tab-pane fade show active" id="barang-pane" role="tabpanel">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">
+                                            <input type="checkbox" id="checkAllBarang">
+                                        </th>
+                                        <th>ID</th>
+                                        <th>Nama</th>
+                                        <th>Harga</th>
+                                        <th width="15%">Qty Cetak</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($barang as $b)
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox"
+                                                name="items[barang_{{ $b->idbarang }}][id]"
+                                                value="{{ $b->idbarang }}"
+                                                class="check-item-barang">
+                                            <input type="hidden" name="items[barang_{{ $b->idbarang }}][type]" value="barang">
+                                        </td>
+                                        <td>{{ $b->idbarang }}</td>
+                                        <td>{{ $b->nama_barang }}</td>
+                                        <td>Rp {{ number_format($b->harga_barang) }}</td>
+                                        <td>
+                                            <input type="number"
+                                                name="items[barang_{{ $b->idbarang }}][qty]"
+                                                class="form-control qty-input-barang"
+                                                min="1"
+                                                value="1"
+                                                disabled>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="tab-pane fade" id="menu-pane" role="tabpanel">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">
+                                            <input type="checkbox" id="checkAllMenu">
+                                        </th>
+                                        <th>ID</th>
+                                        <th>Nama Menu</th>
+                                        <th>Vendor</th>
+                                        <th>Harga</th>
+                                        <th width="15%">Qty Cetak</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($menu as $m)
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox"
+                                                name="items[menu_{{ $m->idmenu }}][id]"
+                                                value="{{ $m->idmenu }}"
+                                                class="check-item-menu">
+                                            <input type="hidden" name="items[menu_{{ $m->idmenu }}][type]" value="menu">
+                                        </td>
+                                        <td>MNU{{ str_pad($m->idmenu, 5, '0', STR_PAD_LEFT) }}</td>
+                                        <td>{{ $m->nama_menu }}</td>
+                                        <td>{{ $m->vendor->nama_vendor ?? '-' }}</td>
+                                        <td>Rp {{ number_format($m->harga) }}</td>
+                                        <td>
+                                            <input type="number"
+                                                name="items[menu_{{ $m->idmenu }}][qty]"
+                                                class="form-control qty-input-menu"
+                                                min="1"
+                                                value="1"
+                                                disabled>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                     <hr>
 
@@ -91,12 +147,14 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
-            let checkAll = document.getElementById("checkAll");
-            let checkItems = document.querySelectorAll(".check-item");
+            let checkAllBarang = document.getElementById("checkAllBarang");
+            let checkAllMenu = document.getElementById("checkAllMenu");
+            let checkItemsBarang = document.querySelectorAll(".check-item-barang");
+            let checkItemsMenu = document.querySelectorAll(".check-item-menu");
 
             function toggleQty(checkbox) {
                 let row = checkbox.closest("tr");
-                let qtyInput = row.querySelector(".qty-input");
+                let qtyInput = row.querySelector("input[type='number']");
 
                 if (checkbox.checked) {
                     qtyInput.disabled = false;
@@ -106,22 +164,39 @@
                 }
             }
 
-            // CHECK ALL
-            checkAll.addEventListener("change", function() {
-                checkItems.forEach(function(item) {
-                    item.checked = checkAll.checked;
+            // CHECK ALL BARANG
+            checkAllBarang.addEventListener("change", function() {
+                checkItemsBarang.forEach(function(item) {
+                    item.checked = checkAllBarang.checked;
+                    toggleQty(item);
+                });
+            });
+
+            // CHECK ALL MENU
+            checkAllMenu.addEventListener("change", function() {
+                checkItemsMenu.forEach(function(item) {
+                    item.checked = checkAllMenu.checked;
                     toggleQty(item);
                 });
             });
 
             // PER ITEM
-            checkItems.forEach(function(item) {
+            checkItemsBarang.forEach(function(item) {
                 item.addEventListener("change", function() {
                     toggleQty(this);
 
                     // Sync checkAll
-                    let allChecked = Array.from(checkItems).every(i => i.checked);
-                    checkAll.checked = allChecked;
+                    let allChecked = Array.from(checkItemsBarang).every(i => i.checked);
+                    checkAllBarang.checked = allChecked;
+                });
+            });
+
+            checkItemsMenu.forEach(function(item) {
+                item.addEventListener("change", function() {
+                    toggleQty(this);
+
+                    let allChecked = Array.from(checkItemsMenu).every(i => i.checked);
+                    checkAllMenu.checked = allChecked;
                 });
             });
 

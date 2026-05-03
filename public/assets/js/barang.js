@@ -24,8 +24,15 @@ $(document).ready(function () {
             },
             function (res) {
                 location.reload();
-            },
-        );
+            }
+        ).fail(function (xhr) {
+            alert(
+                xhr.responseJSON?.message ||
+                    "Gagal menambah barang. Coba periksa kembali data atau session login.",
+            );
+        }).always(function () {
+            btn.html("Tambah").prop("disabled", false);
+        });
     });
 
     // ===== Hover highlight =====
@@ -74,6 +81,15 @@ $(document).ready(function () {
             success: function (res) {
                 location.reload();
             },
+            error: function (xhr) {
+                alert(
+                    xhr.responseJSON?.message ||
+                        "Gagal mengubah barang.",
+                );
+            },
+            complete: function () {
+                btn.html("Ubah").prop("disabled", false);
+            },
         });
     });
 
@@ -89,6 +105,12 @@ $(document).ready(function () {
             data: { _token: $('input[name="_token"]').val() },
             success: function () {
                 location.reload();
+            },
+            error: function (xhr) {
+                alert(
+                    xhr.responseJSON?.message ||
+                        "Gagal menghapus barang.",
+                );
             },
         });
     });
