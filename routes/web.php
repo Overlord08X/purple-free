@@ -37,6 +37,7 @@ Route::prefix('pesanan')->group(function () {
     Route::get('/menus/{vendorId}', [pesananController::class, 'getMenus']);
     Route::post('/store', [pesananController::class, 'store']);
     Route::get('/payment/{id}', [pesananController::class, 'payment'])->name('pesanan.payment');
+    Route::get('/verify-status/{id}', [pesananController::class, 'verifyStatus'])->name('pesanan.verify-status');
     Route::get('/success/{id}', [pesananController::class, 'success'])->name('pesanan.success');
 
     Route::post('/checkout', [pesananController::class, 'checkout'])->name('pesanan.checkout');
@@ -89,6 +90,10 @@ Route::middleware(['auth', 'check.session'])->group(function () {
 
     Route::get('/pos', [posController::class, 'index'])->name('project.pos');
     Route::get('/kantin', [kantinController::class, 'index'])->name('project.kantin');
+    Route::get('/kunjungan-toko', [projectController::class, 'kunjunganToko'])->name('project.kunjungan.toko');
+    Route::post('/kunjungan-toko', [projectController::class, 'storeKunjunganToko'])->name('project.kunjungan.toko.store');
+    Route::post('/kunjungan-toko/verify', [projectController::class, 'verifyKunjunganToko'])->name('project.kunjungan.toko.verify');
+    Route::get('/kunjungan-toko/{idvendor}/barcode', [projectController::class, 'barcode'])->name('project.kunjungan.toko.barcode');
     Route::get('/scanner', [projectController::class, 'scanner'])->name('project.scanner');
     Route::get('/vendor', [projectController::class, 'vendor'])->name('project.vendor');
     Route::post('/vendor', [projectController::class, 'storeVendor'])->name('project.vendor.store');

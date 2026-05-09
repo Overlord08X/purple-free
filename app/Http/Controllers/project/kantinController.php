@@ -13,7 +13,7 @@ class kantinController extends Controller
     {
         $barangs = DB::table('barang')->orderBy('nama_barang')->get();
         $menus = Menu::with('vendor')->orderBy('nama_menu')->get();
-        return view('project.kantin', compact('barangs', 'menus'));
+        return view('kantin_modul8.kantin', compact('barangs', 'menus'));
     }
 
     public function getBarang($kode)

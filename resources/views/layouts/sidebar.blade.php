@@ -146,6 +146,11 @@
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.kunjungan.toko') }}">
+                Kunjungan Toko
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="{{ route('project.scanner') }}">
                 Barcode Scanner
               </a>

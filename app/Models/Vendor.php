@@ -12,7 +12,17 @@ class Vendor extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'nama_vendor'
+        'nama_vendor',
+        'barcode',
+        'latitude',
+        'longitude',
+        'accuracy'
+    ];
+
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'accuracy' => 'float',
     ];
 
     // RELATION
