@@ -321,7 +321,7 @@
         function getAccuratePosition(targetAccuracy = 50, maxWait = 20000) {
             return new Promise((resolve, reject) => {
                 let bestResult = null;
-                const startTime = Date.now();
+                let resolved = false;
 
                 const watchId = navigator.geolocation.watchPosition((position) => {
                     const acc = position.coords.accuracy;
@@ -331,20 +331,15 @@
                     }
 
                     if (acc <= targetAccuracy) {
+                        resolved = true;
                         navigator.geolocation.clearWatch(watchId);
                         resolve(bestResult);
                         return;
                     }
-
-                    if (Date.now() - startTime >= maxWait) {
-                        navigator.geolocation.clearWatch(watchId);
-                        if (bestResult) {
-                            resolve(bestResult);
-                        } else {
-                            reject(new Error('Timeout, tidak dapat posisi'));
-                        }
-                    }
                 }, (error) => {
+                    if (resolved) {
+                        return;
+                    }
                     navigator.geolocation.clearWatch(watchId);
                     reject(error);
                 }, {
@@ -352,6 +347,21 @@
                     maximumAge: 0,
                     timeout: maxWait
                 });
+
+                window.setTimeout(() => {
+                    if (resolved) {
+                        return;
+                    }
+
+                    resolved = true;
+                    navigator.geolocation.clearWatch(watchId);
+
+                    if (bestResult) {
+                        resolve(bestResult);
+                    } else {
+                        reject(new Error('Timeout, tidak dapat posisi'));
+                    }
+                }, maxWait);
             });
         }
 
@@ -413,7 +423,12 @@
             document.getElementById(targetLatField).value = position.coords.latitude.toFixed(7);
             document.getElementById(targetLngField).value = position.coords.longitude.toFixed(7);
             document.getElementById(targetAccuracyField).value = position.coords.accuracy.toFixed(2);
-            setGeoStatus(`berhasil (${position.coords.accuracy.toFixed(2)} m)`, 'success');
+
+            if (position.coords.accuracy <= targetAccuracy) {
+                setGeoStatus(`berhasil (${position.coords.accuracy.toFixed(2)} m)`, 'success');
+            } else {
+                setGeoStatus(`lokasi terisi, tapi akurasi masih ${position.coords.accuracy.toFixed(2)} m`, 'warning');
+            }
             return position;
         }
 
