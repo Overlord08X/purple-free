@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Barang;
 use Illuminate\Support\Facades\DB;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 class barangController extends Controller
 {
     // Tampilkan halaman index
@@ -82,5 +83,14 @@ class barangController extends Controller
             ->first();
 
         return response()->json($barang);
+    }
+
+    public function cetakPDF($id)
+    {
+        $barang = Barang::findOrFail($id);
+        
+        $pdf = Pdf::loadView('barang.cetak', compact('barang'));
+        
+        return $pdf->download('barang_' . $barang->idbarang . '.pdf');
     }
 }

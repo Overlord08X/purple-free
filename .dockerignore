@@ -1,0 +1,17 @@
+node_modules/
+vendor/
+.env
+.env.*.php
+.env.*.production
+storage/logs/
+storage/framework/sessions/
+storage/framework/views/
+storage/framework/cache/
+bootstrap/cache/
+.git/
+.gitignore
+.php-cs-fixer.cache
+.phpunit.result.cache
+/docker-compose.override.yml
+.DS_Store
+Thumbs.db

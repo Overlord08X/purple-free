@@ -114,6 +114,25 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#AntrianMenu" aria-expanded="false" aria-controls="AntrianMenu">
+          <span class="menu-title">Antrian Digital</span>
+          <i class="mdi mdi-queue-first-in-last-out menu-icon"></i>
+        </a>
+        <div class="collapse" id="AntrianMenu">
+          <ul class="nav flex-column sub-menu">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('antrian.guest') }}">Guest</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('antrian.admin') }}">Admin</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('antrian.papan') }}">Papan Antrian</a>
+            </li>
+          </ul>
+        </div>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#Project" aria-expanded="false" aria-controls="Project">
           <span class="menu-title">Project</span>
           <i class="mdi mdi-folder menu-icon"></i>

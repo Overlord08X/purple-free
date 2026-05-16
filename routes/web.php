@@ -17,9 +17,21 @@ use App\Http\Controllers\payment\vendorController;
 use App\Http\Controllers\barang\barangController as BarangController;
 use App\Http\Controllers\payment\paymentController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\qrcode\qrcodeController;
 
 Route::redirect('/', '/dashboard');
+
+Route::get('/guest', [AntrianController::class, 'guest'])->name('antrian.guest');
+Route::get('/admin', [AntrianController::class, 'admin'])->name('antrian.admin');
+Route::get('/papan', [AntrianController::class, 'papan'])->name('antrian.papan');
+Route::get('/sse/antrian', [AntrianController::class, 'stream']);
+Route::post('/antrian/store', [AntrianController::class, 'store'])->name('antrian.store');
+Route::post('/antrian/panggil', [AntrianController::class, 'panggil'])->name('antrian.panggil');
+Route::post('/antrian/panggil-ulang', [AntrianController::class, 'ulang'])->name('antrian.ulang');
+Route::post('/antrian/terlambat', [AntrianController::class, 'terlambat'])->name('antrian.terlambat');
+Route::post('/antrian/selesai', [AntrianController::class, 'selesai'])->name('antrian.selesai');
+Route::get('/antrian/audio', [AntrianController::class, 'generateAnnouncement'])->name('antrian.audio');
 
 Auth::routes();
 

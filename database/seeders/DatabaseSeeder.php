@@ -39,6 +39,7 @@ public function run(): void
         kategoriSeeder::class,
         bukuSeeder::class,
         VendorSeeder::class,
+        AntrianSeeder::class,
     ]);
 }
 }
