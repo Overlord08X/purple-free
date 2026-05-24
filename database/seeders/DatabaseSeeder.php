@@ -40,6 +40,7 @@ public function run(): void
         bukuSeeder::class,
         VendorSeeder::class,
         AntrianSeeder::class,
+        MahasiswaSeeder::class,
     ]);
 }
 }

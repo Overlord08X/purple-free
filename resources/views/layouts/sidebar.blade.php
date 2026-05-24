@@ -189,6 +189,16 @@
                 Vendor Scanner
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.nfc.absensi') }}">
+                NFC Absensi
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('project.nfc.mahasiswa.index') }}">
+                Registrasi Kartu NFC
+              </a>
+            </li>
           </ul>
         </div>
       </li>

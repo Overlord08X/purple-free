@@ -19,6 +19,8 @@ use App\Http\Controllers\payment\paymentController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\qrcode\qrcodeController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\MahasiswaController;
 
 Route::redirect('/', '/dashboard');
 
@@ -113,6 +115,12 @@ Route::middleware(['auth', 'check.session'])->group(function () {
     Route::delete('/vendor/menu/{id}', [projectController::class, 'destroyMenu'])->name('project.vendor.menu.destroy');
     Route::get('/vendor-scan', [projectController::class, 'vendorScanner'])->name('project.vendor.scan');
     Route::get('/vendor/order/{idpesanan}', [projectController::class, 'vendorOrder'])->name('project.vendor.order');
+    Route::get('/nfc-absensi', [AttendanceController::class, 'scanner'])->name('project.nfc.absensi');
+    Route::post('/api/absensi', [AttendanceController::class, 'store'])->name('api.absensi.store');
+    Route::get('/nfc-mahasiswa', [MahasiswaController::class, 'index'])->name('project.nfc.mahasiswa.index');
+    Route::post('/nfc-mahasiswa', [MahasiswaController::class, 'store'])->name('project.nfc.mahasiswa.store');
+    Route::put('/nfc-mahasiswa/{mahasiswa}', [MahasiswaController::class, 'update'])->name('project.nfc.mahasiswa.update');
+    Route::delete('/nfc-mahasiswa/{mahasiswa}', [MahasiswaController::class, 'destroy'])->name('project.nfc.mahasiswa.destroy');
 
     Route::get('/barang/{kode}', function ($kode) {
         $barang = \App\Models\Barang::where('idbarang', $kode)->first();

@@ -58,3 +58,19 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 # purple-free
+
+## Run Ngrok In Docker
+
+Expose aplikasi ke internet tanpa install ngrok di host:
+
+1. Isi `NGROK_AUTHTOKEN` di file `.env`.
+2. Jalankan service utama:
+	- `docker compose up -d app db nginx redis`
+3. Jalankan tunnel ngrok (profile `tunnel`):
+	- `docker compose --profile tunnel up -d ngrok`
+4. Lihat URL publik:
+	- `docker logs -f purple_ngrok`
+
+Catatan:
+- Dashboard inspeksi ngrok tersedia di `http://localhost:4040`.
+- Web NFC tetap memerlukan browser yang mendukung (misalnya Chrome Android), Firefox belum mendukung Web NFC.

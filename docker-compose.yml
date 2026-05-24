@@ -66,11 +66,31 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+    - redisdata:/data
     networks:
       - laravel
 
+  ngrok:
+    image: ngrok/ngrok:3
+    container_name: purple_ngrok
+    restart: unless-stopped
+    depends_on:
+      - nginx
+    command: http nginx:80 --log=stdout
+    environment:
+      - NGROK_AUTHTOKEN=3E7etuzI2bkdN9j07ZWWPLrqfEC_5qHKWwFDRFbHcWvZqHuve
+    ports:
+      - "4040:4040"
+    networks:
+      - laravel
+    profiles:
+      - tunnel
+
 volumes:
   dbdata:
+    driver: local
+  redisdata:
     driver: local
 
 networks:

@@ -20,10 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS scheme when APP_URL uses https (helps when behind proxies/ngrok)
-        $appUrl = env('APP_URL', '');
-        if (!empty($appUrl) && str_starts_with($appUrl, 'https')) {
-            URL::forceRootUrl($appUrl);
+        // Optional: force https scheme globally when needed.
+        if (filter_var(env('FORCE_HTTPS', false), FILTER_VALIDATE_BOOL)) {
             URL::forceScheme('https');
         }
     }
